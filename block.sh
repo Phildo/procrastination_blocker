@@ -2,7 +2,7 @@
 
 # The MIT License (MIT)
 # 
-# Copyright (c) <year> <copyright holders>
+# Copyright (c) 2014 Phil Dougherty
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -24,13 +24,14 @@
 
 HOSTS="/etc/hosts"
 BAK="/etc/hosts.blocked-bak"
-USAGE="`basename $0` [-f filename] [domainname ...] | [-u]"
+USAGE="`basename $0` [-e] [-f filename] [domainname ...] | [-u]"
 BLOCK_BEGIN_DELIM="#BLOCK_BEGIN"
 BLOCK_END_DELIM="#BLOCK_END"
 TMPFILE=.BLOCK_$$_$RANDOM.tmp
 
 error()
 {
+  rm $TMPFILE
   echo "$@" >&2;
   exit 1;
 }
@@ -77,6 +78,17 @@ fi
 
 #block
 echo $BLOCK_BEGIN_DELIM > $TMPFILE
+
+#from variable
+if [ "$1" == "-e" ]; then
+  if [ -z $DNS_R2LOCAL_NAMES ]; then
+    error "-e : no environment variable \"DNS_R2LOCAL_NAMES\" found"
+  fi
+
+  echo $DNS_R2LOCAL_NAMES | sed "s/,/\n/g" | sed "s/http:\/\///" | sed "s/www.//" | awk '{ print "127.0.0.1 " $1 "\n127.0.0.1 www." $1 }' >> $TMPFILE
+  shift
+fi
+
 #from file
 if [ "$1" == "-f" ]; then
   if [ $# -lt 2 ]; then
@@ -85,10 +97,11 @@ if [ "$1" == "-f" ]; then
     error "$2: no such file found"
   fi
 
-  cat $2 | sed "s/http:\/\///" | sed "s/www.//" | awk '{ print "127.0.0.1 " $1 "\n127.0.0.1 www." $1 }' >> $TMPFILE
+  cat $2 | sed "s/,/\n/g" | sed "s/http:\/\///" | sed "s/www.//" | awk '{ print "127.0.0.1 " $1 "\n127.0.0.1 www." $1 }' >> $TMPFILE
   shift
   shift
 fi
+
 #from args
 for a in $@; do
    echo $a | sed "s/http:\/\///" | sed "s/www.//" | awk '{ print "127.0.0.1 " $1 "\n127.0.0.1 www." $1 }' >> $TMPFILE
