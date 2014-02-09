@@ -81,10 +81,10 @@ echo $BLOCK_BEGIN_DELIM > $TMPFILE
 
 #from variable
 if [ "$1" == "-e" ]; then
-  if [ -z "$DNS_R2LOCAL_NAMES" ]; then
-    error "-e : no environment variable \"DNS_R2LOCAL_NAMES\" found"
+  if [ -z "$R2L_NAMES" ]; then
+    error "-e : no environment variable \"R2L_NAMES\" found"
   fi
-  echo $DNS_R2LOCAL_NAMES | tr , '\n' | sed "s/http:\/\///" | sed "s/www.//" | awk '{ print "127.0.0.1 " $1 "\n127.0.0.1 www." $1 }' >> $TMPFILE
+  echo $R2L_NAMES | tr , '\n' | sed "s/http:\/\///" | sed "s/www.//" | awk '{ print "127.0.0.1 " $1 "\n127.0.0.1 www." $1 }' >> $TMPFILE
   shift
 fi
 
